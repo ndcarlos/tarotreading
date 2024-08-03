@@ -1,0 +1,16 @@
+
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.card-section {
+  margin-bottom: 20px; /* Adjust the value as needed */
+}
+
+.card-section:last-child {
+  margin-bottom: 0; /* Remove margin from the last section */
+}

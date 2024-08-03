@@ -1,0 +1,310 @@
+---
+title: "tarot0624.test"
+author: "Noah Carlos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## library
+
+```{r}
+library(jsonlite)
+library(tidyverse)
+library(dplyr)
+library(bslib)
+library(bsicons)
+library(htmlwidgets)
+library(shiny)
+
+```
+
+## Read JSON
+
+```{r}
+rw.json <- fromJSON("/Users/noahcarlos/Documents/R_Studio/tarot.0624/tarot/data/card_data.json")
+
+rw.json
+
+```
+
+## Establish Base
+
+```{r}
+#BASE
+
+rw.df <- rw.json$cards
+
+name.rwdf <- rw.df%>%
+  select(name, type, everything())
+
+rw.df
+
+
+```
+
+## Creating rw.full which includes reversed card draws
+
+```{r}
+
+names_r <- paste(name.rwdf$name, "Reversed", sep=" ")
+name_short_r <- paste(name.rwdf$name_short, "R", sep="")
+
+rw.reversed <- name.rwdf %>%
+  select(name, meaning_rev, name_short) %>%
+  mutate(name = names_r,
+         name_short = name_short_r)
+
+colnames(rw.reversed) <- c('name', 'meaning')
+
+rw.up <- name.rwdf %>%
+  select(name, meaning_up, name_short)
+  
+colnames(rw.reversed) <- c('name', 'meaning', 'name_short')
+colnames(rw.up) <- c('name', 'meaning', 'name_short')
+
+#Merge dfs
+
+rw.full <- rbind(rw.up, rw.reversed)
+
+rw.full
+
+
+
+```
+
+Adding name_short column to use for image retrieval
+
+```{r}
+# creating column name_short
+name_short <- name.rwdf$name_short
+
+
+```
+
+## Playing with random selector
+
+```{r}
+pdraw3 <- slice_sample(rw.full, n=3)
+
+pdraw3
+```
+
+Creating random selector function for $k$ cards.
+
+```{r}
+k_cardpull <- function(deck, k){
+  current_pull <- data.frame(slice_sample(deck ,n = k))
+  return(current_pull)
+}
+```
+
+```{r}
+# calling two variables
+
+# test_var <- k_cardpull(rw.full, k=3)
+
+# calling two variables
+
+# test_var[1,1]
+# test_var[1,2]
+
+
+# successfully called the name and meaning columns
+# now considering how to best process it in shiny
+# renderText to output dialogue, etc.
+
+
+name.past <- test_var[1,1]
+meaning.past <- test_var[1,2]
+script.past1 <- "This is what the past card can be highlighting in your life..."
+script.past2 <- "Is this card highlighting anything signicant that influenced your past?"
+
+name.present <- test_var[2,1]
+meaning.present <- test_var[2,2]
+script.present1 <- "This is what the present card can be highlighting in your life..."
+script.present2 <- "Does this card strike close to home for you right now?"
+
+
+name.future <- test_var[3,1]
+meaning.future <- test_var[3,2]
+script.future1 <- "This is what the future card can be highlighting in your life..."
+script.future2 <- "Can you see any ways this may relate to your past situations?"
+
+
+name.future
+meaning.future
+script.future1
+script.future2
+```
+
+```{r}
+# test name_split
+
+# determining the necessity of this function 
+
+names_split <- function(deck){
+  return(deck[,1])
+}
+
+test_names <- names_split(test_var)
+
+test_names[1]
+test_names[2]
+test_names[3]
+
+```
+
+# Building out inner tarot reading elements. Creating containers for each card. Functions to create the output for each card, etc
+
+## Past, Present, Future read_type
+
+Creating Scripts for Reading -> Card Function
+```{r}
+# names and scripts for card creation
+
+name.past <- test_var[1, 1]
+meaning.past <- test_var[1, 2]
+script.past1 <- "This is what the past card can be highlighting in your life..."
+script.past2 <- "Is this card highlighting anything signicant that influenced your past?"
+
+name.present <- test_var[2, 1]
+meaning.present <- test_var[2, 2]
+script.present1 <- "This is what the present card can be highlighting in your life..."
+script.present2 <- "Does this card strike close to home for you right now?"
+
+
+name.future <- test_var[3, 1]
+meaning.future <- test_var[3, 2]
+script.future1 <- "This is what the future card can be highlighting in your life..."
+script.future2 <- "Can you see any ways this may relate to your past situations?"
+
+
+
+```
+
+
+
+
+
+Card Function
+```{r}
+
+# past_output function
+past_output <- function(current_card) {
+  layout_column_wrap(
+    width = '100%',
+    # height = 300,
+    card(
+      full_screen = TRUE,
+      card_header("Past", style = 'font-size:24px; font-weight = bold;'),
+      card_body(
+        style = "font-style: italic;",
+        "This is what the past card can be highlighting in your life...",
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+      
+      
+      card_title(current_card[1, 1], style = 'font-size:16px; font-weight = bold;', tags$div(style = "margin-bottom: 10px;")),
+      card_header(
+        paste(current_card[1, 2]),
+        style = 'font-size16px;',
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+      
+      card_body(
+        style = "font-style: italic;",
+        "Is this card highlighting anything signicant that influenced your past?",
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+    ),
+  )
+}
+
+present_output <- function(current_card) {
+  layout_column_wrap(
+    width = '100%',
+    # height = 300,
+    card(
+      full_screen = TRUE,
+      card_header("Present", style = 'font-size:24px; font-weight = bold;'),
+      card_body(
+        style = "font-style: italic;",
+        script.present1,
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+      
+      
+      card_title(current_card[2, 1], style = 'font-size:16px;', tags$div(style = "margin-bottom: 10px;")),
+      card_header(
+        paste(current_card[2, 2]),
+        style = 'font-size16px; font-weight = bold;',
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+      
+      card_body(
+        style = "font-style: italic;",
+        script.present2,
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+    ),
+  )
+}
+
+future_output <- function(current_card) {
+  layout_column_wrap(
+    width = '100%',
+    # height = 300,
+    card(
+      full_screen = TRUE,
+      card_header("Future", style = 'font-size:24px; font-weight = bold;'),
+      card_body(
+        style = "font-style: italic;",
+        script.future1,
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+      
+      
+      card_title(current_card[3, 1], style = 'font-size:16px;', tags$div(style = "margin-bottom: 10px;")),
+      card_header(
+        paste(current_card[3, 2]),
+        style = 'font-size16px; font-weight = bold;',
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+      
+      card_body(
+        style = "font-style: italic;",
+        script.future2,
+        tags$div(style = "margin-bottom: 10px;")
+      ),
+    ),
+  )
+}
+
+
+
+
+
+
+
+```
+
+
+
+
+```{r}
+
+
+
+past_output(test_var)
+present_output(test_var)
+future_output(test_var)
+
+
+```
+
